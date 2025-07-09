@@ -953,6 +953,8 @@ namespace CNC3
                                     case 385:
                                     case 800:
                                     case 810:
+                                    case 820:
+                                    case 830:
                                         stritem.priority = 1; break;
                                     case 280:
                                     case 281:
@@ -1039,6 +1041,8 @@ namespace CNC3
                                     case 433:
                                     case 434:
                                     case 810:
+                                    case 820:
+                                    case 830:
                                         stritem.parameters = true;
                                         break;
                                     default:

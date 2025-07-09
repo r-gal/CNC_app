@@ -4,6 +4,7 @@
 #<zPos> = 0
 #<zSafe> = 0
 
+g90
 g53 z[#<zSafe> ]
 g53 x[#<xPos> ] y[#<yPos> ]
 g53 z[#<zPos> ]

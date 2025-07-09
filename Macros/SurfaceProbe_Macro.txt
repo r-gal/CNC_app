@@ -4,6 +4,7 @@
 
 
 
+g90
 (init array)
 G43.3 x[#<Xsize>] y[#<Ysize>] i[#<Xstep>] j[#<Xstep>] 
 

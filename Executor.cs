@@ -397,15 +397,6 @@ namespace CNC3
             absEndZ = tmpPos.z;
             absInitPos = executor.CalcMachinePos(initPos);
 
-            if(stepZ <= 0)
-            {
-                stepZ = absInitPos.z - absEndZ;
-            }
-
-
-
-
-
         }
 
         public override MoveData GetMove()
@@ -472,19 +463,9 @@ namespace CNC3
                         }
                         else
                         {
-                            if(delay > 0)
-                            {
-                                move = new MoveData();
-                                move.orderCode = MoveData.orderCode_et.DELAY;
-                                move.delay = delay;
-                                phase = 3;
-                                return move;
-                            }
-                            else
-                            {
-                                /* skip phase 2*/
-                                phase = 3;
-                            }
+
+                            /* skip phase 2*/
+                            phase = 3;
 
                         }
                         break;
@@ -494,16 +475,25 @@ namespace CNC3
                             Coord startPoint = new Coord(actPos);
                             Coord endPoint = new Coord(absInitPos);
 
-                            endPoint.z = actPos.z - stepZ;
-                            if (endPoint.z <= absEndZ)
+                            if(stepZ > 0)
+                            {
+                                endPoint.z = actPos.z - stepZ;
+                                if (endPoint.z <= absEndZ)
+                                {
+                                    endPoint.z = absEndZ;
+                                    phase = 4;
+                                }
+                                else
+                                {
+                                    phase = 10;
+                                }
+                            }
+                            else
                             {
                                 endPoint.z = absEndZ;
                                 phase = 4;
                             }
-                            else
-                            {
-                                phase = 10;
-                            }                                
+                                  
                             move = executor.ExecLine(startPoint, endPoint, false, true);
                             
                             return move;
@@ -515,8 +505,19 @@ namespace CNC3
                         }
                         break;
                     case 4: /* dwel at bottom of hole */
-                        /*dwel, skip */
-                        phase = 5;
+                        if (delay > 0)
+                        {
+                            move = new MoveData();
+                            move.orderCode = MoveData.orderCode_et.DELAY;
+                            move.delay = delay;
+                            phase = 5;
+                            return move;
+                        }
+                        else
+                        {
+                            /* skip phase 4*/
+                            phase = 5;
+                        }
                         break;
                     case 5: /* rapid move to top Z */
                         if (actPos.z != absInitPos.z)
@@ -556,7 +557,7 @@ namespace CNC3
                             Coord endPoint = new Coord(absInitPos);
                             endPoint.z = absClearZ;
                             move = executor.ExecLine(startPoint, endPoint, true, true);
-                            phase = 3;
+                            phase = 11;
                             return move;
                         }
                         else
@@ -1411,7 +1412,6 @@ namespace CNC3
             bool validZ = false;
             bool validR = false;
             bool validL = false;
-            bool validQ = false;
 
             int x = 0;
             int y = 0;
@@ -1419,6 +1419,7 @@ namespace CNC3
             int r = 0;
             int l = 1;
             int q = 0;
+            int p = 0;
 
 
             foreach (var param in parArray)
@@ -1429,8 +1430,9 @@ namespace CNC3
                     case 'Y': validY = true; y = (int)(param.value * 1000); break;
                     case 'Z': validZ = true; z = (int)(param.value * 1000); break;
                     case 'R': validR = true; r = (int)(param.value * 1000); break;
-                    case 'Q': validQ = true; q = (int)(param.value * 1000); break;
+                    case 'Q': q = (int)(param.value * 1000); break;
                     case 'L': validL = true; l = (int)(param.value); break;
+                    case 'P': p = (int)(param.value * 1000); break;
                 }
             }
 
@@ -1452,9 +1454,10 @@ namespace CNC3
             int delay = 0;
             if (parArray[0].value == 820)
             {
-
-
-
+                if(p >=0)
+                {
+                    delay = p;
+                }
             }
 
             Coord initPoint = new Coord(data.actLocalPos);

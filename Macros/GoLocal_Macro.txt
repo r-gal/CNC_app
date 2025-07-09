@@ -5,6 +5,7 @@
 #<zSafe> = 0
 #<zSafeIsLocal> = 0
 
+g90
 o100 if [#<zSafeIsLocal> EQ 1]
 g0 z[#<zSafe> ]
 o100 else
