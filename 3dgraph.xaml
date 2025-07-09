@@ -1,0 +1,118 @@
+﻿<UserControl x:Class="myCnc2._3dgraph"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:myCnc2"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <!-- Place a Label control at the top of the view. -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="90"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            
+        </Grid.ColumnDefinitions>
+
+        <Grid x:Name="FormLayoutGrid" Grid.Row="1" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+            </Grid.RowDefinitions>
+            <Button Grid.Row="0" Grid.Column="0" Content = "zoom -" Click="ZoomMinus" ClickMode="Press" Name="btn_zoomM" Margin="2"/>
+            <Button Grid.Row="0" Grid.Column="1" Content = "zoom +" Click="ZoomPlus"  ClickMode="Press" Name="btn_zoomP" Margin="2"/>
+
+            <Button Grid.Row="1" Grid.Column="0" Content = "Rot Left" Click="RotateLeft" ClickMode="Press" Name="btn_rotL" Margin="2"/>
+            <Button Grid.Row="1" Grid.Column="1" Content = "Rot Right" Click="RotateRight"  ClickMode="Press" Name="btn_rotR" Margin="2"/>
+            
+
+            <Button Grid.Row="0" Grid.Column="2" Content = "Left" Click="MoveLeft" ClickMode="Press" Name="btn_moveL" Margin="2"/>
+            <Button Grid.Row="0" Grid.Column="3" Content = "Right +" Click="MoveRight"  ClickMode="Press" Name="btn_moveR" Margin="2"/>
+            <Button Grid.Row="1" Grid.Column="2" Content = "Forward" Click="MoveForward" ClickMode="Press" Name="btn_moveF" Margin="2"/>
+            <Button Grid.Row="1" Grid.Column="3" Content = "Backward" Click="MoveBackward"  ClickMode="Press" Name="btn_moveB" Margin="2"/>
+        </Grid>
+
+        <Label 
+                HorizontalAlignment="Center" 
+                TextBlock.TextAlignment="Center" 
+                FontSize="20" 
+                Foreground="Red" 
+                Content="Model: Cone"/>
+
+
+
+        <!-- Viewport3D is the rendering surface. -->
+        <Viewport3D x:Name="myViewport" Grid.RowSpan="2" Grid.Row="3" Grid.Column="0">
+            <!-- Add a camera. -->
+            <!--<Viewport3D.Camera>
+                --><!--<PerspectiveCamera 
+                        FarPlaneDistance="1000" 
+                        LookDirection="-0.4,0.3,-0.2" 
+                        UpDirection="0,0,1" 
+                        NearPlaneDistance="1" 
+                        Position="50,-30 30" 
+                        FieldOfView="45" />--><!--
+            </Viewport3D.Camera>-->
+
+
+            <!-- Add models. -->
+
+
+            <ModelVisual3D x:Name= "myModel">
+                <ModelVisual3D.Content>
+
+                    <Model3DGroup >
+                        <!--<Model3DGroup.Children>
+
+
+
+                            --><!-- Define a red cone. --><!--
+                            <GeometryModel3D>
+
+                                <GeometryModel3D.Geometry>
+                                    <MeshGeometry3D 
+                                    Positions="0 0 1 1  -1 0  -1 1 1"
+                                    TriangleIndices="0 1 2" />
+                                </GeometryModel3D.Geometry>
+
+                                <GeometryModel3D.Material>
+                                    <DiffuseMaterial>
+                                        <DiffuseMaterial.Brush>
+                                            <SolidColorBrush 
+                        Color="Red" 
+                        Opacity="1.0"/>
+                                        </DiffuseMaterial.Brush>
+                                    </DiffuseMaterial>
+                                </GeometryModel3D.Material>
+
+                            </GeometryModel3D>
+
+                            <AmbientLight>
+
+                            </AmbientLight>--><!--
+
+
+                        </Model3DGroup.Children>-->
+                    </Model3DGroup>
+
+                </ModelVisual3D.Content>
+
+            </ModelVisual3D>
+
+
+        </Viewport3D>
+    </Grid>
+    
+    
+</UserControl>
