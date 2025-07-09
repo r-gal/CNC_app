@@ -1,0 +1,15 @@
+(prameters below may be owerwritten)
+#<xPos> = 0
+#<yPos> = 0
+#<zPos> = 0
+#<zSafe> = 0
+#<zSafeIsLocal> = 0
+
+o100 if [#<zSafeIsLocal> EQ 1]
+g0 z[#<zSafe> ]
+o100 else
+g53 z[#<zSafe> ]
+o100 endif
+g0 x[#<xPos> ] y[#<yPos> ]
+g0 z[#<zPos> ]
+m2

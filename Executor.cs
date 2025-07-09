@@ -359,10 +359,13 @@ namespace CNC3
         int absClearZ;
         int absEndZ;
 
+        int drilledZ;
 
         int stepX;
         int stepY;
+        int stepZ; 
         int repeats;
+        int delay;
 
         int phase = 0;
         /*
@@ -375,13 +378,15 @@ namespace CNC3
          * if repeat then goto phase 1 
          */
 
-        public DrillingCycleInstruction(Executor executor_, Coord initPos, int clearZ, int endZ, int repeats_, int stepX_, int stepY_)
+        public DrillingCycleInstruction(Executor executor_, Coord initPos, int clearZ, int endZ, int repeats_, int stepX_, int stepY_, int stepZ_, int delay_)
         {
             executor = executor_;
 
             stepX = stepX_;
             stepY = stepY_;
+            stepZ = stepZ_;
             repeats = repeats_;
+            delay = delay_;
 
             /* convert position data to absolute */
         Coord tmpPos = new Coord(0, 0, clearZ, 0);
@@ -391,6 +396,13 @@ namespace CNC3
             tmpPos = executor.CalcMachinePos(tmpPos);
             absEndZ = tmpPos.z;
             absInitPos = executor.CalcMachinePos(initPos);
+
+            if(stepZ <= 0)
+            {
+                stepZ = absInitPos.z - absEndZ;
+            }
+
+
 
 
 
@@ -407,7 +419,7 @@ namespace CNC3
             {
                 switch(phase)
                 {
-                    case 0:
+                    case 0:  /* rapid go up to clear Z */
                         if (actPos.z < absClearZ)
                         {
                             absInitPos.z = absClearZ;
@@ -427,12 +439,18 @@ namespace CNC3
                         }
                         break;
 
-                    case 1:
-                        if(actPos.x != absInitPos.x | actPos.y != absInitPos.y)
+                    case 1: /* rapid move to X,Y position */
+                        if(actPos.x != absInitPos.x | actPos.y != absInitPos.y) 
                         {
                             Coord startPoint = new Coord(actPos);
                             Coord endPoint = new Coord(absInitPos);
                             move = executor.ExecLine(startPoint, endPoint, true, true);
+
+                            if (executor.Get_CannedCycleReturnLevel() == true)
+                            {                                
+                                absInitPos.z = absClearZ;
+                            }
+
                             phase = 2;
                             return move;
                         }
@@ -442,7 +460,7 @@ namespace CNC3
                             phase = 2;
                         }
                         break;
-                    case 2:
+                    case 2: /* rapid move down to clear Z */
                         if(actPos.z != absClearZ)
                         {
                             Coord startPoint = new Coord(actPos);
@@ -454,18 +472,40 @@ namespace CNC3
                         }
                         else
                         {
-                            /* skip phase 2*/
-                            phase = 3;
+                            if(delay > 0)
+                            {
+                                move = new MoveData();
+                                move.orderCode = MoveData.orderCode_et.DELAY;
+                                move.delay = delay;
+                                phase = 3;
+                                return move;
+                            }
+                            else
+                            {
+                                /* skip phase 2*/
+                                phase = 3;
+                            }
+
                         }
                         break;
-                    case 3:
+                    case 3: /* drill down */
                         if (actPos.z != absEndZ)
                         {
                             Coord startPoint = new Coord(actPos);
                             Coord endPoint = new Coord(absInitPos);
-                            endPoint.z = absEndZ;
+
+                            endPoint.z = actPos.z - stepZ;
+                            if (endPoint.z <= absEndZ)
+                            {
+                                endPoint.z = absEndZ;
+                                phase = 4;
+                            }
+                            else
+                            {
+                                phase = 10;
+                            }                                
                             move = executor.ExecLine(startPoint, endPoint, false, true);
-                            phase = 4;
+                            
                             return move;
                         }
                         else
@@ -474,11 +514,11 @@ namespace CNC3
                             phase = 4;
                         }
                         break;
-                    case 4:
+                    case 4: /* dwel at bottom of hole */
                         /*dwel, skip */
                         phase = 5;
                         break;
-                    case 5:
+                    case 5: /* rapid move to top Z */
                         if (actPos.z != absInitPos.z)
                         {
                             Coord startPoint = new Coord(actPos);
@@ -493,7 +533,7 @@ namespace CNC3
                             phase = 6;
                         }
                         break;
-                    case 6:
+                    case 6: /* check if next hole to drill */
                         repeats--;
                         if(repeats > 0)
                         {
@@ -507,6 +547,42 @@ namespace CNC3
                             return null;                            
                         }
                         break;
+
+                    case 10: /* rapid move up to clear Z */
+                        drilledZ = actPos.z;
+                        if (actPos.z != absClearZ)
+                        {
+                            Coord startPoint = new Coord(actPos);
+                            Coord endPoint = new Coord(absInitPos);
+                            endPoint.z = absClearZ;
+                            move = executor.ExecLine(startPoint, endPoint, true, true);
+                            phase = 3;
+                            return move;
+                        }
+                        else
+                        {
+                            /* skip phase 10*/
+                            phase = 11;
+                        }
+                        break;
+
+                    case 11: /* rapid move to bottom of hole */
+                        if (actPos.z != drilledZ + 10)
+                        {
+                            Coord startPoint = new Coord(actPos);
+                            Coord endPoint = new Coord(absInitPos);
+                            endPoint.z = drilledZ + 10;
+                            move = executor.ExecLine(startPoint, endPoint, true, true);
+                            phase = 3;
+                            return move;
+                        }
+                        else
+                        {
+                            /* skip phase 11 */
+                            phase = 3;
+                        }
+                        break;
+
                     default:
                         cont = false;
                         break;
@@ -582,7 +658,7 @@ namespace CNC3
             gCodeCompMath.globalArray[5431] = offset;
         }
 
-        bool Get_CannedCycleReturnLevel()
+        public bool Get_CannedCycleReturnLevel()
         {
             return (gCodeCompMath.globalArray[5602] != 0);
         }
@@ -888,10 +964,12 @@ namespace CNC3
                                 case 990: /* G99 */
                                     Set_CannedCycleReturnLevel(true);
                                     break;
-                                case 800: break;          /* G80 */
+                                case 800:           /* G80 */
                                     move = ExecG800();
                                     break;
-                                case 810: break;          /* G81 */
+                                case 810:           /* G81 */
+                                case 820:           /* G82 */
+                                case 830:           /* G83 */
                                     move = ExecG810(parArray);
                                     break;
 
@@ -1323,9 +1401,7 @@ namespace CNC3
 
         MoveData ExecG800()
         {
-            MoveData moveData = new MoveData();
-            moveData.orderCode = MoveData.orderCode_et.SUFRACE_OFFSET_DEACTIVATE;
-            return moveData;
+            return null;
         }
 
         MoveData ExecG810(Word_st[] parArray)
@@ -1335,24 +1411,50 @@ namespace CNC3
             bool validZ = false;
             bool validR = false;
             bool validL = false;
+            bool validQ = false;
 
             int x = 0;
             int y = 0;
             int z = 0;
             int r = 0;
             int l = 1;
+            int q = 0;
 
 
             foreach (var param in parArray)
             {
                 switch (param.c)
                 {
-                    case 'X': validX = true; y = (int)(param.value * 1000); break;
+                    case 'X': validX = true; x = (int)(param.value * 1000); break;
                     case 'Y': validY = true; y = (int)(param.value * 1000); break;
                     case 'Z': validZ = true; z = (int)(param.value * 1000); break;
                     case 'R': validR = true; r = (int)(param.value * 1000); break;
+                    case 'Q': validQ = true; q = (int)(param.value * 1000); break;
                     case 'L': validL = true; l = (int)(param.value); break;
                 }
+            }
+
+            int stepZ = 0;
+            if (parArray[0].value == 830) 
+            {
+                if(q <= 0)
+                {
+                    int lineIdx = (int)parArray[1].value;
+                    PrintError(lineIdx, "Invalid or missing Q value");
+                }
+                else
+                {
+                    stepZ = q;
+                }
+
+            }
+
+            int delay = 0;
+            if (parArray[0].value == 820)
+            {
+
+
+
             }
 
             Coord initPoint = new Coord(data.actLocalPos);
@@ -1360,6 +1462,8 @@ namespace CNC3
             int endZ = initPoint.z; 
             int stepX = 0; 
             int stepY = 0;
+            
+            
 
             if (data.posMode == PosMode_et.ABS)
             {
@@ -1414,7 +1518,7 @@ namespace CNC3
 
             }
 
-            multiLineinstruction = new DrillingCycleInstruction(this, initPoint, clearZ, endZ, l, stepX, stepY);
+            multiLineinstruction = new DrillingCycleInstruction(this, initPoint, clearZ, endZ, l, stepX, stepY, stepZ, delay) ;
             return multiLineinstruction.GetMove();
 
         }

@@ -1,0 +1,50 @@
+( variables below will be injected: )
+( #<Xsize> #<Ysize> #<Xstep> #<Ystep> )
+
+
+
+
+(init array)
+G43.3 x[#<Xsize>] y[#<Ysize>] i[#<Xstep>] j[#<Xstep>] 
+
+(go to start position)
+G0 z5
+G0 x0 y0
+
+#<Xpos> = 0
+#<Ypos> = 0
+
+#<Xidx> = 0
+#<Yidx> = 0
+
+o100 repeat [#<Xsize>]
+
+  #<Ypos> = 0
+  #<Yidx> = 0
+
+  o200 repeat [#<Ysize>]
+
+    G0 x[#<Xpos>] y[#<Ypos>]
+    G38.3 z-10 f50
+    G43.4 i[#<Xidx>] j[#<Yidx>]
+    G0 z5
+
+    #<Ypos> = #<Ypos> + #<Ystep>
+    #<Yidx> = #<Yidx> + 1
+
+  o200 endrepeat
+
+  #<Xpos> = #<Xpos> + #<Xstep>
+  #<Xidx> = #<Xidx> + 1
+
+
+o100 endrepeat
+
+(activate array)
+G43.5
+
+(return to start position)
+G0 z5
+G0 x0 y0
+
+M2
