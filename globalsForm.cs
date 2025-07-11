@@ -52,6 +52,9 @@ namespace CNC3
                 if (i == 5210) { name = "G92 offset status"; print = true; }
                 if (i == 5430) { name = "Tool length offset"; print = true; }
                 if (i == 5431) { name = "Tool length sensor offset"; print = true; }
+                if (i == 5432) { name = "Tool length sensor offset valid"; print = true; }
+
+                if (i == 5440) { name = "Canned cycle return level"; print = true; }
 
                 if (i >= 5061 && i <= 5064) { name = "Probe pos_" + axesC[j]; print = true; }
                 if (i == 5070) { name = "Probe result"; print = true; }

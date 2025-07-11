@@ -317,7 +317,7 @@ namespace CNC3
             {
                 phase = 100;
                 /* save offset */
-                if(calib)
+                if (calib || (executor.Get_ToolLengthSensorOffsetValid() == false))
                 {
                     executor.CalcProbeOffset();
                 }
@@ -611,9 +611,15 @@ namespace CNC3
 
         CoordInGlobal probePos = new CoordInGlobal(5061);
 
+
         void SetProbeResult(bool result)
         {
             gCodeCompMath.globalArray[5070] = result ? 1 : 0;
+        }
+
+        bool GetProbeResult()
+        {
+            return (gCodeCompMath.globalArray[5070] == 1);
         }
 
         ToolDiameterCompensation toolDiameterCompensation = new ToolDiameterCompensation();
@@ -657,15 +663,24 @@ namespace CNC3
         void Set_ToolLengthSensorOffset(double offset)
         {
             gCodeCompMath.globalArray[5431] = offset;
+            Set_ToolLengthSensorOffsetValid(true);
+        }
+        internal bool Get_ToolLengthSensorOffsetValid()
+        {
+            return (gCodeCompMath.globalArray[5432] == 1);
+        }
+        void Set_ToolLengthSensorOffsetValid(bool state)
+        {
+            gCodeCompMath.globalArray[5432] = state ? 1 : 0;
         }
 
         public bool Get_CannedCycleReturnLevel()
         {
-            return (gCodeCompMath.globalArray[5602] != 0);
+            return (gCodeCompMath.globalArray[5440] != 0);
         }
         void Set_CannedCycleReturnLevel(bool status)
         {
-            gCodeCompMath.globalArray[5602] = status ? 1 : 0;
+            gCodeCompMath.globalArray[5440] = status ? 1 : 0;
         }
 
         double millSpeed = 0;
@@ -681,17 +696,23 @@ namespace CNC3
 
         internal void CalcToolLengthOffset()
         {
-            Coord actPos = GetActPos();
-            double newOffset = (((double)(actPos.z))* 0.001) - Get_ToolLengthSensorOffset();
-            Set_ToolLengthOffset(newOffset);
+            if (GetProbeResult())
+            { 
+                Coord actPos = GetActPos();
+                double newOffset = (((double)(actPos.z)) * 0.001) - Get_ToolLengthSensorOffset();
+                Set_ToolLengthOffset(newOffset);
+            }
         }
 
         internal void CalcProbeOffset()
         {
-            Coord actPos = GetActPos();
-            double newOffset = (((double)(actPos.z)) * 0.001);
-            Set_ToolLengthOffset(0);
-            Set_ToolLengthSensorOffset(newOffset);
+            if (GetProbeResult())
+            {
+                Coord actPos = GetActPos();
+                double newOffset = (((double)(actPos.z)) * 0.001);
+                Set_ToolLengthOffset(0);
+                Set_ToolLengthSensorOffset(newOffset);
+            }
         }
 
         public Executor(cGodeCompiller compiller_) 
