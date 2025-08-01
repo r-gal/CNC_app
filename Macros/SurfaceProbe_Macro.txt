@@ -1,12 +1,12 @@
 ( variables below will be injected: )
-( #<Xsize> #<Ysize> #<Xstep> #<Ystep> )
+( #<xProbes> #<yProbes> #<xStep> #<yStep> )
 
 
 
 
 g90
 (init array)
-G43.3 x[#<Xsize>] y[#<Ysize>] i[#<Xstep>] j[#<Xstep>] 
+G43.3 i[#<xProbes>] j[#<yProbes>] x[#<xStep>] y[#<yStep>] 
 
 (go to start position)
 G0 z5
@@ -18,24 +18,24 @@ G0 x0 y0
 #<Xidx> = 0
 #<Yidx> = 0
 
-o100 repeat [#<Xsize>]
+o100 repeat [#<xSize>]
 
   #<Ypos> = 0
   #<Yidx> = 0
 
-  o200 repeat [#<Ysize>]
+  o200 repeat [#<xSize>]
 
     G0 x[#<Xpos>] y[#<Ypos>]
     G38.3 z-10 f50
     G43.4 i[#<Xidx>] j[#<Yidx>]
     G0 z5
 
-    #<Ypos> = #<Ypos> + #<Ystep>
+    #<Ypos> = #<Ypos> + #<yStep>
     #<Yidx> = #<Yidx> + 1
 
   o200 endrepeat
 
-  #<Xpos> = #<Xpos> + #<Xstep>
+  #<Xpos> = #<Xpos> + #<xStep>
   #<Xidx> = #<Xidx> + 1
 
 

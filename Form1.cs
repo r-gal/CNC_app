@@ -13,6 +13,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+//using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Media.TextFormatting;
 using System.Xml;
@@ -218,19 +219,22 @@ namespace CNC3
         public void PrintPositionCallback(double x, double y, double z, double a)
         {
             guiAxePosPanel.SetPosition(x, y, z, a);
-
         }
 
         public void PrintPositionLocalCallback(double x, double y, double z, double a)
         {
             guiAxePosPanel.SetPositionLocal(x, y, z, a);
-
         }
 
         public void PrintPositionCallbackReal(double x, double y, double z, double a)
         {
             guiAxePosPanel.SetPositionReal(x, y, z, a);
+        }
 
+        public void SetProgresValueCallback(int progress, string text)
+        {
+            toolStripProgressBar1.Text = text;
+            toolStripProgressBar1.Value = progress;
         }
 
         private void ReadConfig()
@@ -299,8 +303,10 @@ namespace CNC3
             mainClass.ConnectionStatusCallback += new MainClass.ConnectionStatusCallbackType(ConnectionStatusCallback);
             mainClass.PipelineStatusCallback += new MainClass.PipelineStatusCallbackType(PipelineStatusCallback);
 
+            MainClass.CallbackSetProgress += new MainClass.CallbackSetProgressType(SetProgresValueCallback);
             MainClass.GetNoOfLinesCallback += new MainClass.CallbackGetNoOfLines(GetNoOfLines);
             MainClass.GetLineCallback += new MainClass.CallbackGetLine(GetLine);
+            MainClass.GetLinesArrayCallback += new MainClass.GetLinesArrayCallbackType(GetLinesArray);
             MainClass.ErrorCallback += new MainClass.CallbackErrorCallback(ErrorHandler);
             gCodeCompMath.ErrorCallback += new gCodeCompMath.CallbackErrorCallback(ErrorHandler);
             cGodeCompiller.ErrorCallback += new cGodeCompiller.CallbackErrorCallback(ErrorHandler);
@@ -320,22 +326,31 @@ namespace CNC3
 
         }
 
-
+        public string[] GetLinesArray()
+        {
+            return guiCodeEditorPanel.GetLinesArray();
+        }
 
 
         public int GetNoOfLines()
-        {
+        {            
             return guiCodeEditorPanel.GetNoOfLines();
         }
 
         public string GetLine(int idx)
         {
-            return guiCodeEditorPanel.GetLine(idx);
+            return guiCodeEditorPanel.GetLine(idx);            
         }
 
         public void ErrorHandler(string errMsg)
         {
             richTextBox1.AppendText(errMsg);
+            if(richTextBox1.Lines.Length > 1000)
+            {
+                int start_index = richTextBox1.GetFirstCharIndexFromLine(0);
+                int count = richTextBox1.Lines[0].Length;
+                richTextBox1.Text = richTextBox1.Text.Remove(start_index, count + 1);
+            }
         }
 
         public void FileDragged(string fileName)

@@ -215,7 +215,6 @@ namespace CNC3
             button.UseVisualStyleBackColor = true;
             button.Text = "CLEAR OFFSETS";
             button.Click += new System.EventHandler(this.ClearOffsetsButtonClick);
-            button.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MacroButtonClick);
             button.Tag = 3;
             groupBox.Controls.Add(button);
 

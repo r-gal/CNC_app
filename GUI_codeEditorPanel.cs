@@ -133,6 +133,14 @@ namespace CNC3
             {
                 return "";
             }
+            
+        }
+
+        public string[] GetLinesArray()
+        {
+            string[] array = textBox.Text.Split('\n'); 
+
+            return array;
         }
 
         public void OpenFile(string fileName)

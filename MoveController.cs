@@ -1256,13 +1256,11 @@ namespace CNC3
             xStart = gPos.x - lPos.x;
             yStart = gPos.y - lPos.y;
 
-            surfaceProbes.Init(xSize, ySize, xStep, yStep,xStart,yStart);
-
             codeFile = GetMacroCode("SurfaceProbe_Macro.txt", true);
             if (codeFile != null && codeFile.Length > 5)
             {
-                codeFile[1] = "#<xSize> = " + xSize.ToString();
-                codeFile[2] = "#<ySize> = " + ySize.ToString();
+                codeFile[1] = "#<xProbes> = " + xSize.ToString();
+                codeFile[2] = "#<yProbes> = " + ySize.ToString();
                 codeFile[3] = "#<xStep> = " + (((double)xStep) * 0.001).ToString();
                 codeFile[4] = "#<yStep> = " + (((double)yStep) * 0.001).ToString();
 

@@ -107,15 +107,30 @@ namespace CNC3
 
         public delegate void CallbackErrorCallback(string errorMsg);
         public static event CallbackErrorCallback ErrorCallback;
-
         
         public delegate string CallbackGetLine(int lineNo);
         public static event CallbackGetLine GetLineCallback;
 
+        public delegate string[] GetLinesArrayCallbackType();
+        public static event GetLinesArrayCallbackType GetLinesArrayCallback;
+        
         public delegate int CallbackGetNoOfLines();
         public static event CallbackGetNoOfLines GetNoOfLinesCallback;
 
+        public delegate void CallbackSetProgressType(int progress, string text);
+        public static event CallbackSetProgressType CallbackSetProgress;
 
+
+        static string progressText = "";
+        public static void SetProgress(int progress)
+        {
+            CallbackSetProgress(progress, progressText);
+        }
+        public static void SetProgress(int progress,string text)
+        {
+            progressText = text;
+            CallbackSetProgress(progress,text);
+        }
 
         private void TimerEventProcessor(Object myObject,
                                         EventArgs myEventArgs)
@@ -310,14 +325,18 @@ namespace CNC3
 
         string[] GetMainCode()
         {
+            return GetLinesArrayCallback();
+            /*
             int size = GetNoOfLinesCallback();
             string[] array = new string[size];
+            MainClass.SetProgress(0,"Loading");
             for(int i=0;i<size;i++)
             {
                 array[i] = GetLineCallback(i);
+                MainClass.SetProgress((i*100)/size);
             }
-
-            return array;
+            MainClass.SetProgress(100);
+            return array;*/
         }
 
 

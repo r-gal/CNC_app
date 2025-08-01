@@ -205,7 +205,7 @@ namespace CNC3
 
             bool ok = true;
 
-
+            MainClass.SetProgress(0,"Compiling");
 
 
             for (int i = 0; (i < lines) && ok; i++)
@@ -251,6 +251,7 @@ namespace CNC3
                 }
                 /* phase 3 - selection type */
 
+                MainClass.SetProgress((50*i)/lines);
             }
             /* add last line */
             if( tmpLine != "")
@@ -265,6 +266,8 @@ namespace CNC3
             for (int i = 0; (i < preprocesed.Count) && ok; i++)
             {
                 ok = ParseLine(preprocesed[i]);
+
+                MainClass.SetProgress(50 + ((50 * i) / preprocesed.Count));
             }
 
             if(ok)
@@ -280,6 +283,7 @@ namespace CNC3
             {
                 ErrorCallback("Compilation Success\n");
             }
+            MainClass.SetProgress(100);
 
             return ok;
         }
@@ -294,6 +298,7 @@ namespace CNC3
 
             while ((execIdx < codeArray.Count) && ok)
             {
+                MainClass.SetProgress(execIdx * 100 / codeArray.Count, "Run");
                 double result = 0;
                 int orgIdx = codeArray[execIdx].orgIdx;
                 switch (codeArray[execIdx].type)
