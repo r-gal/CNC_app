@@ -590,7 +590,7 @@ namespace CNC3
         {
             if (state == State_et.Idle)
             {
-                
+               /* 
                 bool checkResult = RunSimulation(false, codeFile);
                 
                 if(checkResult == false)
@@ -598,7 +598,7 @@ namespace CNC3
                     ErrorCallback("Simulation failed, ABORT \n");
                     return;
                 }
-
+               */
 
                 int startLine;
                 if (parameters == null)

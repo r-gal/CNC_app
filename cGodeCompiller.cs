@@ -535,6 +535,7 @@ namespace CNC3
                         break;
                 }
             }
+            MainClass.SetProgress(100);
             return null;
         }
         public bool RunExecution()
