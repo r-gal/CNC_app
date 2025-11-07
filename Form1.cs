@@ -344,13 +344,17 @@ namespace CNC3
 
         public void ErrorHandler(string errMsg)
         {
-            richTextBox1.AppendText(errMsg);
+            
             if(richTextBox1.Lines.Length > 1000)
             {
+                /*
                 int start_index = richTextBox1.GetFirstCharIndexFromLine(0);
                 int count = richTextBox1.Lines[0].Length;
                 richTextBox1.Text = richTextBox1.Text.Remove(start_index, count + 1);
+                */
+                richTextBox1.Clear();
             }
+            richTextBox1.AppendText(errMsg);
         }
 
         public void FileDragged(string fileName)

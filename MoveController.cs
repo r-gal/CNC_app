@@ -1102,8 +1102,8 @@ namespace CNC3
             sendMsg.data[9] = moveData.endPoint.a;
             sendMsg.data[10] = ignoreLimiters ? 1 : 0;
 
-            ErrorCallback("SEND Line: (" + sendMsg.data[6].ToString() + "," + sendMsg.data[7].ToString() + "," + sendMsg.data[8].ToString() + "," + sendMsg.data[9].ToString() + "\n");
-            ErrorCallback("vs=" + sendMsg.data[2].ToString() + " ve=" + sendMsg.data[3].ToString() + " vMax=" + sendMsg.data[4].ToString() + " aMax=" + sendMsg.data[5].ToString() + " SEQ= " +  sendMsg.data[0].ToString() + "\n");
+            //ErrorCallback("SEND Line: (" + sendMsg.data[6].ToString() + "," + sendMsg.data[7].ToString() + "," + sendMsg.data[8].ToString() + "," + sendMsg.data[9].ToString() + "\n");
+            //ErrorCallback("vs=" + sendMsg.data[2].ToString() + " ve=" + sendMsg.data[3].ToString() + " vMax=" + sendMsg.data[4].ToString() + " aMax=" + sendMsg.data[5].ToString() + " SEQ= " +  sendMsg.data[0].ToString() + "\n");
 
             return conn.SendAndReceiveUdp(sendMsg);
 
@@ -1154,10 +1154,10 @@ namespace CNC3
 
             sendMsg.data[16] = moveData.turns;
 
-            ErrorCallback("SEND Arc2: (" + sendMsg.data[6].ToString() + "," + sendMsg.data[7].ToString() + "," + sendMsg.data[8].ToString() + "," + sendMsg.data[9].ToString() + " SEQ= " + sendMsg.data[0].ToString() + "\n");
-            ErrorCallback("centre: (" + sendMsg.data[10].ToString() + "," + sendMsg.data[11].ToString() + "," + sendMsg.data[12].ToString() + "\n");
-            ErrorCallback("rotVecotr: (" + sendMsg.data[13].ToString() + "," + sendMsg.data[14].ToString() + "," + sendMsg.data[15].ToString() + "\n");
-            ErrorCallback("vs=" + sendMsg.data[2].ToString() + " ve=" + sendMsg.data[3].ToString() + " vMax=" + sendMsg.data[4].ToString() + " aMax=" + sendMsg.data[5].ToString() + "\n");
+            //ErrorCallback("SEND Arc2: (" + sendMsg.data[6].ToString() + "," + sendMsg.data[7].ToString() + "," + sendMsg.data[8].ToString() + "," + sendMsg.data[9].ToString() + " SEQ= " + sendMsg.data[0].ToString() + "\n");
+            //ErrorCallback("centre: (" + sendMsg.data[10].ToString() + "," + sendMsg.data[11].ToString() + "," + sendMsg.data[12].ToString() + "\n");
+            //ErrorCallback("rotVecotr: (" + sendMsg.data[13].ToString() + "," + sendMsg.data[14].ToString() + "," + sendMsg.data[15].ToString() + "\n");
+            //ErrorCallback("vs=" + sendMsg.data[2].ToString() + " ve=" + sendMsg.data[3].ToString() + " vMax=" + sendMsg.data[4].ToString() + " aMax=" + sendMsg.data[5].ToString() + "\n");
 
             return conn.SendAndReceiveUdp(sendMsg);
 

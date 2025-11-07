@@ -80,7 +80,7 @@
             this.ClientSize = new System.Drawing.Size(967, 701);
             this.Controls.Add(this.dataGridView1);
             this.Name = "globalsForm";
-            this.Text = "globalsForm";
+            this.Text = "w";
             this.Load += new System.EventHandler(this.globalsForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);

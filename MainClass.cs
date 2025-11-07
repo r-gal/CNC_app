@@ -17,7 +17,7 @@ namespace CNC3
     public class Constants
     {
         public const int NO_OF_AXES = 4;
-        public const int MOVE_BUFFOR_LENGTH = 8;
+        public const int MOVE_BUFFOR_LENGTH = 32;
         public const int PIPELINE_LENGTH = 8;
         public const double ZeroLen = 0.021;
         public const int GRANULARITY = 10;
