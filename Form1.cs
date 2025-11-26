@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -237,6 +238,11 @@ namespace CNC3
             toolStripProgressBar1.Value = progress;
         }
 
+        public void PrintSeqNumbers(int execSeqNo, int sentSeqNo)
+        {
+            toolStripStatusLabel2.Text = "Sent = " + sentSeqNo.ToString() + ", Exec = " + execSeqNo.ToString();
+        }
+
         private void ReadConfig()
         {
             bool cont = false;
@@ -302,16 +308,20 @@ namespace CNC3
             mainClass.PrintPositionCallbackReal += new MainClass.PrintPositionCallbackType(PrintPositionCallbackReal);
             mainClass.ConnectionStatusCallback += new MainClass.ConnectionStatusCallbackType(ConnectionStatusCallback);
             mainClass.PipelineStatusCallback += new MainClass.PipelineStatusCallbackType(PipelineStatusCallback);
+            mainClass.SeqNumbersStatusCallback += new MainClass.SeqNumbersStatusCallbackType(PrintSeqNumbers); 
 
             MainClass.CallbackSetProgress += new MainClass.CallbackSetProgressType(SetProgresValueCallback);
             MainClass.GetNoOfLinesCallback += new MainClass.CallbackGetNoOfLines(GetNoOfLines);
             MainClass.GetLineCallback += new MainClass.CallbackGetLine(GetLine);
             MainClass.GetLinesArrayCallback += new MainClass.GetLinesArrayCallbackType(GetLinesArray);
             MainClass.ErrorCallback += new MainClass.CallbackErrorCallback(ErrorHandler);
+            
             gCodeCompMath.ErrorCallback += new gCodeCompMath.CallbackErrorCallback(ErrorHandler);
             cGodeCompiller.ErrorCallback += new cGodeCompiller.CallbackErrorCallback(ErrorHandler);
             MoveController.ErrorCallback += new MoveController.CallbackErrorCallback(ErrorHandler);
             Executor.ErrorCallback += new Executor.CallbackErrorCallback(ErrorHandler);
+            TXQueue.ErrorCallback += new TXQueue.CallbackErrorCallback(ErrorHandler);
+
 
             mainClass.Init();
 

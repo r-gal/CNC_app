@@ -32,7 +32,8 @@ namespace CNC3
             OC_MANUAL_MOVE_START,
             OC_MANUAL_MOVE_STOP,
             OC_RESULT_ACK,
-            OC_SUFRACE_OFFSET
+            OC_SUFRACE_OFFSET,
+            OC_RUN_BULK
 
 
         };

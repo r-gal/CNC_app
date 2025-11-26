@@ -17,11 +17,12 @@ namespace CNC3
     public class Constants
     {
         public const int NO_OF_AXES = 4;
-        public const int MOVE_BUFFOR_LENGTH = 32;
+        public const int MOVE_BUFFOR_LENGTH = 60;
         public const int PIPELINE_LENGTH = 8;
         public const double ZeroLen = 0.021;
         public const int GRANULARITY = 10;
         public const int NO_OF_MACROS = 6;
+        public const int QUEUE_SIZE = 10;
     };
 
 
@@ -105,6 +106,9 @@ namespace CNC3
         public delegate void PipelineStatusCallbackType(string statusString);
         public event PipelineStatusCallbackType PipelineStatusCallback;
 
+        public delegate void SeqNumbersStatusCallbackType(int execSeqNo, int actSeqNo);
+        public event SeqNumbersStatusCallbackType SeqNumbersStatusCallback;
+
         public delegate void CallbackErrorCallback(string errorMsg);
         public static event CallbackErrorCallback ErrorCallback;
         
@@ -180,9 +184,11 @@ namespace CNC3
                     moveController.UpdateStatus(status);
                     moveController.UpdateActSeqNo(result.data[5], result.data[7]);
 
+                    SeqNumbersStatusCallback(result.data[5], result.data[7]);
 
 
-                    if((status & STATUS_BIT.STATUS_BIT_RESULTS) != 0)
+
+                    if ((status & STATUS_BIT.STATUS_BIT_RESULTS) != 0)
                     {
                         MsgData ackMsg = new MsgData(1);
                         ackMsg.orderCode = MsgData.ConOrderCode_et.OC_RESULT_ACK;

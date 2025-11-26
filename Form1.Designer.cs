@@ -54,10 +54,12 @@
             this.StateStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.PipelineStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.ofd = new System.Windows.Forms.OpenFileDialog();
             this.sfd = new System.Windows.Forms.SaveFileDialog();
-            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
+            this.SeqStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -232,7 +234,9 @@
             this.StateStatusLabel,
             this.PipelineStatusLabel,
             this.toolStripStatusLabel1,
-            this.toolStripProgressBar1});
+            this.toolStripProgressBar1,
+            this.SeqStatusLabel,
+            this.toolStripStatusLabel2});
             this.statusStrip1.Location = new System.Drawing.Point(0, 1012);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(1258, 32);
@@ -264,6 +268,11 @@
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(22, 25);
             this.toolStripStatusLabel1.Text = "0";
             // 
+            // toolStripProgressBar1
+            // 
+            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
+            this.toolStripProgressBar1.Size = new System.Drawing.Size(100, 24);
+            // 
             // richTextBox1
             // 
             this.richTextBox1.Location = new System.Drawing.Point(10, 740);
@@ -282,10 +291,16 @@
             // 
             this.sfd.FileOk += new System.ComponentModel.CancelEventHandler(this.sfd_FileOk);
             // 
-            // toolStripProgressBar1
+            // SeqStatusLabel
             // 
-            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
-            this.toolStripProgressBar1.Size = new System.Drawing.Size(100, 24);
+            this.SeqStatusLabel.Name = "SeqStatusLabel";
+            this.SeqStatusLabel.Size = new System.Drawing.Size(0, 25);
+            // 
+            // toolStripStatusLabel2
+            // 
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(179, 25);
+            this.toolStripStatusLabel2.Text = "toolStripStatusLabel2";
             // 
             // Form1
             // 
@@ -340,6 +355,8 @@
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem surfaceProbeToolStripMenuItem;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
+        private System.Windows.Forms.ToolStripStatusLabel SeqStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
     }
 }
 

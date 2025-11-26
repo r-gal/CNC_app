@@ -127,6 +127,7 @@
     <Compile Include="RotMatrix.cs" />
     <Compile Include="SpeedUnit.cs" />
     <Compile Include="ToolDiameterCompensation.cs" />
+    <Compile Include="TXQueue.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

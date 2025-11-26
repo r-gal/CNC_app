@@ -102,7 +102,8 @@ namespace CNC3
             SUFRACE_OFFSET_INIT,
             SUFRACE_OFFSET_SET,
             SUFRACE_OFFSET_ACTIVATE,
-            SUFRACE_OFFSET_DEACTIVATE
+            SUFRACE_OFFSET_DEACTIVATE,
+            SUFRACE_OFFSET_CLEAR
         };
 
         public orderCode_et orderCode;
@@ -264,6 +265,8 @@ namespace CNC3
         int sentSeqNo; /* seqNo  sent */
         int actSeqNo; /* act executed seqNo */
 
+        TXQueue txQueue;
+
         Timer manualMoveTimer = new Timer();
         ManualMoveData manualMoveData;
         Coord realPos;
@@ -309,7 +312,10 @@ namespace CNC3
         { 
             conn = conn_;
             pipelineUnit = new PipelineUnit(executor_);
+
+            txQueue = new TXQueue(conn_, surfaceProbes);
             
+
             executor = executor_;
             sentSeqNo = 0;
             state = State_et.Idle;  
@@ -334,7 +340,7 @@ namespace CNC3
                 MoveData moveData = pipelineUnit.GetMove(false);
                 if (moveData != null)
                 {
-                    MsgData result = SendMove(moveData);
+                    txQueue.QueueMessage(moveData);
                     sentSeqNo = moveData.seqNo;
                     if (moveData.orderCode == MoveData.orderCode_et.STOP)
                     {
@@ -354,7 +360,7 @@ namespace CNC3
                 }
                 else
                 {
-
+                    txQueue.FlushSendQueue();
                     break;
                 }
 
@@ -367,6 +373,7 @@ namespace CNC3
 
                 if (moveData == null)
                 {
+                    txQueue.FlushSendQueue();
                     if (i == 0)
                     {
                         SetState(State_et.Idle);
@@ -379,7 +386,7 @@ namespace CNC3
                 else
                 {
                     i++;
-                    MsgData result = SendMove(moveData);
+                    txQueue.QueueMessage(moveData);
                     sentSeqNo = moveData.seqNo;
 
                     if (moveData.orderCode == MoveData.orderCode_et.STOP)
@@ -437,7 +444,7 @@ namespace CNC3
                     MoveData moveData = pipelineUnit.GetMove(false);
                     if (moveData != null)
                     {
-                        MsgData result = SendMove(moveData);
+                        txQueue.QueueMessage(moveData);
                         sentSeqNo = moveData.seqNo;
                         if (moveData.orderCode == MoveData.orderCode_et.STOP)
                         {
@@ -446,6 +453,7 @@ namespace CNC3
                         if (moveData.orderCode == MoveData.orderCode_et.PAUSE)
                         {
                             SetState(State_et.Paused);
+                            txQueue.FlushSendQueue();
                             if (WaitForContinue() == false)
                             {
                                 SetState(State_et.Idle);
@@ -460,9 +468,10 @@ namespace CNC3
                         else if (moveData.orderCode == MoveData.orderCode_et.PAUSE_TOOL_CHANGE)
                         {
                             SetState(State_et.Paused);
+                            txQueue.FlushSendQueue();
                             if (WaitForToolChange(moveData.mode) == false)
                             {
-                                SetState(State_et.Idle);
+                                SetState(State_et.Idle);                                
                                 return;
                             }
                             else
@@ -474,14 +483,15 @@ namespace CNC3
                         if (moveData.orderCode == MoveData.orderCode_et.PROBE)
                         {
                             SetState(State_et.Probing);
-                            //ErrorCallback("Probing breake 1\n");
+                            txQueue.FlushSendQueue();
+                            //ErrorCallback("Probing break 1\n");
                             break;
                         }
 
                     }
                     else
                     {
-
+                        txQueue.FlushSendQueue();
                         break;
                     }
 
@@ -626,7 +636,8 @@ namespace CNC3
 
                     if(moveData == null)
                     {
-                        if(i == 0)
+                        txQueue.FlushSendQueue();
+                        if (i == 0)
                         {
                             SetState(State_et.Idle);
                         }
@@ -637,22 +648,28 @@ namespace CNC3
                     }
                     else
                     {
-                        i++; 
-                        MsgData result = SendMove(moveData);
+                        i++;
+                        txQueue.QueueMessage(moveData);
+                        if(i >= Constants.MOVE_BUFFOR_LENGTH)
+                        {
+                            txQueue.FlushSendQueue();
+                        }
                         sentSeqNo = moveData.seqNo;
 
                         if (moveData.orderCode == MoveData.orderCode_et.STOP)
                         {
                             SetState(State_et.Finishing);
+                            txQueue.FlushSendQueue();
                             break;
                         }
                         else if (moveData.orderCode == MoveData.orderCode_et.PAUSE)
                         {
                             State_et stateTmp = state;
                             SetState(State_et.Paused);
+                            txQueue.FlushSendQueue();
                             if (WaitForContinue() == false)
                             {
-                                SetState(State_et.Idle);
+                                SetState(State_et.Idle);                                
                                 return;
                             }
                             else
@@ -665,9 +682,9 @@ namespace CNC3
                         {
                             State_et stateTmp = state;
                             SetState(State_et.Paused);
-                            if (WaitForToolChange(moveData.mode) == false)
-                            {
-                                SetState(State_et.Idle);
+                            txQueue.FlushSendQueue();
+                            if (WaitForToolChange(moveData.mode) == false)                            {
+                                SetState(State_et.Idle);                                
                                 return;
                             }
                             else
@@ -679,7 +696,8 @@ namespace CNC3
                         if (moveData.orderCode == MoveData.orderCode_et.PROBE)
                         {
                             SetState(State_et.Probing);
-                            //ErrorCallback("Probing breake 2\n");
+                            //ErrorCallback("Probing break 2\n");
+                            txQueue.FlushSendQueue();
                             break;
                         }
 
@@ -749,7 +767,7 @@ namespace CNC3
                 else
                 {
 
-                    MsgData result = SendMove(moveData);
+                    txQueue.QueueMessage(moveData);
                     sentSeqNo = moveData.seqNo;
 
 
@@ -759,11 +777,16 @@ namespace CNC3
 
                         if (moveData == null)
                         {
+                            txQueue.FlushSendQueue();
                             break;
                         }
                         else
                         {
-                            result = SendMove(moveData);
+                            txQueue.QueueMessage(moveData);
+                            if (i >= Constants.MOVE_BUFFOR_LENGTH)
+                            {
+                                txQueue.FlushSendQueue();
+                            }
                             sentSeqNo = moveData.seqNo;
 
                             if (moveData.orderCode == MoveData.orderCode_et.STOP)
@@ -787,6 +810,7 @@ namespace CNC3
             MsgData sendMsg = new MsgData(msgLength);
 
             sendMsg.orderCode = MsgData.ConOrderCode_et.OC_RESET;
+            txQueue.Clear();
 
             ErrorCallback("RESET \n");
             conn.SendAndReceiveUdp(sendMsg);
@@ -859,181 +883,11 @@ namespace CNC3
         }
 
 
-        private MsgData SendMove(MoveData moveData)
-        {
-            MsgData result = null;
-            switch (moveData.orderCode)
-            {
-                case MoveData.orderCode_et.LINE:
-                    result = SendLine(moveData,false); 
-                    break;
-              /*  case MoveData.orderCode_et.ARC:
-                    result = SendArc(moveData);
-                    break;*/
-                case MoveData.orderCode_et.ARC2:
-                    result = SendArc2(moveData);
-                    break;
-                case MoveData.orderCode_et.DELAY:
-                    result = SendDelay(moveData);
-                    break;
-                case MoveData.orderCode_et.SPINDLE_SPEED:
-                    result = SendSpindleSpeed(moveData);
-                    break;
-                case MoveData.orderCode_et.STOP:
-                    result = SendStop(moveData); 
-                    break;
-                case MoveData.orderCode_et.PAUSE:
-                    result = SendPause(moveData);
-                    break;
-                case MoveData.orderCode_et.PROBE:
-                    result = SendProbe(moveData);
-                    break;
-                case MoveData.orderCode_et.PAUSE_TOOL_CHANGE:
-                    result = SendPause(moveData);
-                    break;
-                case MoveData.orderCode_et.SUFRACE_OFFSET_INIT:
-                    result = SendSurfaceOffset(SurfaceOffsetOrderCode_et.INIT, moveData);
-                    break;
-                case MoveData.orderCode_et.SUFRACE_OFFSET_SET:
-                    result = SendSurfaceOffset(SurfaceOffsetOrderCode_et.SET_POINT, moveData);
-                    break;
-                case MoveData.orderCode_et.SUFRACE_OFFSET_ACTIVATE:
-                    result = SendSurfaceOffset(SurfaceOffsetOrderCode_et.ACTIVATE, moveData);
-                    break;
-                case MoveData.orderCode_et.SUFRACE_OFFSET_DEACTIVATE:
-                    result = SendSurfaceOffset(SurfaceOffsetOrderCode_et.DEACTIVATE, moveData);
-                    break;
-                default:
-                    result = null; 
-                    break;
-
-            }
-            if(result == null)
-            {
-                ErrorCallback("SENT FAILED \n");
-            }
-            return result;
-
-        }
-        private MsgData SendDelay(MoveData moveData)
-        {
-            int msgLength = 3;
-
-            MsgData sendMsg = new MsgData(msgLength);
-
-            for (int i = 0; i < msgLength; i++)
-            {
-                sendMsg.data[i] = 0;
-            }
-
-            sendMsg.orderCode = MsgData.ConOrderCode_et.OC_RUN_DELAY;
-
-            sendMsg.data[0] = moveData.seqNo;
-            sendMsg.data[1] = 0; /* no of segments in msg */
-
-            sendMsg.data[2] = moveData.delay;
-
-            ErrorCallback("SEND Dwel " + sendMsg.data[2].ToString() + "ms \n");
-
-            return conn.SendAndReceiveUdp(sendMsg);
-        }
-
-        private MsgData SendStop(MoveData moveData)
-        {
-            int msgLength = 2;
-
-            MsgData sendMsg = new MsgData(msgLength);
-
-            for (int i = 0; i < msgLength; i++)
-            {
-                sendMsg.data[i] = 0;
-            }
-
-            sendMsg.orderCode = MsgData.ConOrderCode_et.OC_RUN_STOP;
-
-            sendMsg.data[0] = moveData.seqNo;
-            sendMsg.data[1] = 0; /* no of segments in msg */
 
 
-            ErrorCallback("SEND STOP CODE  \n");
+        
 
-            return conn.SendAndReceiveUdp(sendMsg);
-        }
-
-        private MsgData SendPause(MoveData moveData)
-        {
-            int msgLength = 2;
-
-            MsgData sendMsg = new MsgData(msgLength);
-
-            for (int i = 0; i < msgLength; i++)
-            {
-                sendMsg.data[i] = 0;
-            }
-
-            sendMsg.orderCode = MsgData.ConOrderCode_et.OC_RUN_PAUSE;
-
-            sendMsg.data[0] = moveData.seqNo;
-            sendMsg.data[1] = 0; /* no of segments in msg */
-
-
-            ErrorCallback("SEND PAUSE CODE  \n");
-
-            return conn.SendAndReceiveUdp(sendMsg);
-
-        }
-
-        private MsgData SendProbe(MoveData moveData)
-        {
-            int msgLength = 7;
-
-            MsgData sendMsg = new MsgData(msgLength);
-
-            for (int i = 0; i < msgLength; i++)
-            {
-                sendMsg.data[i] = 0;
-            }
-
-            sendMsg.orderCode = MsgData.ConOrderCode_et.OC_RUN_PROBE;
-
-            sendMsg.data[0] = moveData.seqNo;
-            sendMsg.data[1] = 0; /* no of segments in msg */
-
-            sendMsg.data[2] = moveData.axe;
-            sendMsg.data[3] = moveData.probeLength;
-            sendMsg.data[4] = moveData.mode;
-            sendMsg.data[5] = (int)(moveData.maxSpeed * 1000);
-            sendMsg.data[6] = (int)(moveData.maxAcceleration * 1000);
-
-
-
-            ErrorCallback("SEND PROBE CODE: vMax = " + sendMsg.data[5].ToString() + " aMax = " + sendMsg.data[6].ToString() + "\n");
-
-            return conn.SendAndReceiveUdp(sendMsg);
-
-        }
-        private MsgData SendSpindleSpeed(MoveData moveData)
-        {
-            int msgLength = 3;
-
-            MsgData sendMsg = new MsgData(msgLength);
-
-            for (int i = 0; i < msgLength; i++)
-            {
-                sendMsg.data[i] = 0;
-            }
-
-            sendMsg.orderCode = MsgData.ConOrderCode_et.OC_SET_SPINDLE_SPEED;
-
-            sendMsg.data[0] = moveData.seqNo;
-            sendMsg.data[1] = 0; /* no of segments in msg */
-
-            sendMsg.data[2] = moveData.speed;
-
-            ErrorCallback("SEND M3 " + sendMsg.data[2].ToString() + "prom \n");
-
-            return conn.SendAndReceiveUdp(sendMsg);
-        }
+        
 
         private void SendManualMoveStart(MoveData moveData)
         {
@@ -1071,98 +925,7 @@ namespace CNC3
 
         }
 
-        private MsgData SendLine(MoveData moveData, bool ignoreLimiters)
-        {
-            int msgLength = 11;
-
-            MsgData sendMsg = new MsgData(msgLength);
-
-            for (int i = 0; i < msgLength; i++)
-            {
-                sendMsg.data[i] = 0;
-            }
-
-            sendMsg.orderCode = MsgData.ConOrderCode_et.OC_RUN_LINE;
-
-            sendMsg.data[0] = moveData.seqNo ;
-            sendMsg.data[1] = 0; /* no of segments in msg */
-
-            sendMsg.data[2] = (int)(moveData.startSpeed * 1000);
-            sendMsg.data[3] = (int)(moveData.endSpeed * 1000);
-            sendMsg.data[4] = (int)(moveData.maxSpeed * 1000);
-            sendMsg.data[5] = (int)(moveData.maxAcceleration * 1000);
-            /*
-            sendMsg.data[6] = moveData.moveVector.x;
-            sendMsg.data[7] = moveData.moveVector.y;
-            sendMsg.data[8] = moveData.moveVector.z;
-            sendMsg.data[9] = moveData.moveVector.a;*/
-            sendMsg.data[6] = moveData.endPoint.x;
-            sendMsg.data[7] = moveData.endPoint.y;
-            sendMsg.data[8] = moveData.endPoint.z;
-            sendMsg.data[9] = moveData.endPoint.a;
-            sendMsg.data[10] = ignoreLimiters ? 1 : 0;
-
-            //ErrorCallback("SEND Line: (" + sendMsg.data[6].ToString() + "," + sendMsg.data[7].ToString() + "," + sendMsg.data[8].ToString() + "," + sendMsg.data[9].ToString() + "\n");
-            //ErrorCallback("vs=" + sendMsg.data[2].ToString() + " ve=" + sendMsg.data[3].ToString() + " vMax=" + sendMsg.data[4].ToString() + " aMax=" + sendMsg.data[5].ToString() + " SEQ= " +  sendMsg.data[0].ToString() + "\n");
-
-            return conn.SendAndReceiveUdp(sendMsg);
-
-        }
-
-        private MsgData SendArc2(MoveData moveData)
-        {
-            int msgLength = 17;
-
-            MsgData sendMsg = new MsgData(msgLength);
-
-            for (int i = 0; i < msgLength; i++)
-            {
-                sendMsg.data[i] = 0;
-            }
-
-            sendMsg.orderCode = MsgData.ConOrderCode_et.OC_RUN_ARC2;
-
-            sendMsg.data[0] = moveData.seqNo;
-            sendMsg.data[1] = 0; /* no of segments in msg */
-
-            sendMsg.data[2] = (int)(moveData.startSpeed * 1000);
-            sendMsg.data[3] = (int)(moveData.endSpeed * 1000);
-            sendMsg.data[4] = (int)(moveData.maxSpeed * 1000);
-            sendMsg.data[5] = (int)(moveData.maxAcceleration * 1000);
-            /*
-            sendMsg.data[6] = moveData.moveVector.x;
-            sendMsg.data[7] = moveData.moveVector.y;
-            sendMsg.data[8] = moveData.moveVector.z;
-            sendMsg.data[9] = moveData.moveVector.a;
-
-            sendMsg.data[10] = moveData.centrePointVector.x;
-            sendMsg.data[11] = moveData.centrePointVector.y;
-            sendMsg.data[12] = moveData.centrePointVector.z;
-            */
-            sendMsg.data[6] = moveData.endPoint.x;
-            sendMsg.data[7] = moveData.endPoint.y;
-            sendMsg.data[8] = moveData.endPoint.z;
-            sendMsg.data[9] = moveData.endPoint.a;
-
-            sendMsg.data[10] = moveData.centrePoint.x;
-            sendMsg.data[11] = moveData.centrePoint.y;
-            sendMsg.data[12] = moveData.centrePoint.z;
-
-            sendMsg.data[13] = (int)(moveData.rotationAxeVector.X * 1000);
-            sendMsg.data[14] = (int)(moveData.rotationAxeVector.Y * 1000);
-            sendMsg.data[15] = (int)(moveData.rotationAxeVector.Z * 1000);
-
-            sendMsg.data[16] = moveData.turns;
-
-            //ErrorCallback("SEND Arc2: (" + sendMsg.data[6].ToString() + "," + sendMsg.data[7].ToString() + "," + sendMsg.data[8].ToString() + "," + sendMsg.data[9].ToString() + " SEQ= " + sendMsg.data[0].ToString() + "\n");
-            //ErrorCallback("centre: (" + sendMsg.data[10].ToString() + "," + sendMsg.data[11].ToString() + "," + sendMsg.data[12].ToString() + "\n");
-            //ErrorCallback("rotVecotr: (" + sendMsg.data[13].ToString() + "," + sendMsg.data[14].ToString() + "," + sendMsg.data[15].ToString() + "\n");
-            //ErrorCallback("vs=" + sendMsg.data[2].ToString() + " ve=" + sendMsg.data[3].ToString() + " vMax=" + sendMsg.data[4].ToString() + " aMax=" + sendMsg.data[5].ToString() + "\n");
-
-            return conn.SendAndReceiveUdp(sendMsg);
-
-
-        }
+        
 
         public void SendAutoBase()
         {
@@ -1198,47 +961,7 @@ namespace CNC3
             CLEAR
         };
 
-        internal MsgData SendSurfaceOffset(SurfaceOffsetOrderCode_et orderCode,MoveData moveData)
-        {
-
-
-            int msgLength = 8;
-
-            MsgData sendMsg = new MsgData(msgLength);
-            sendMsg.orderCode = MsgData.ConOrderCode_et.OC_SUFRACE_OFFSET;
-
-            sendMsg.data[0] = (int)orderCode;
-
-            switch(orderCode)
-            {
-                case SurfaceOffsetOrderCode_et.INIT:
-                    sendMsg.data[1] = moveData.surfOff_xSize;
-                    sendMsg.data[2] = moveData.surfOff_ySize;
-                    sendMsg.data[3] = moveData.surfOff_xStep;
-                    sendMsg.data[4] = moveData.surfOff_yStep;
-                    sendMsg.data[5] = moveData.surfOff_xStart;
-                    sendMsg.data[6] = moveData.surfOff_yStart;
-
-                    surfaceProbes.Clear();
-                    surfaceProbes.Init(moveData.surfOff_xSize, moveData.surfOff_ySize, moveData.surfOff_xStep, moveData.surfOff_yStep, moveData.surfOff_xStart, moveData.surfOff_yStart);
-                    break;
-                case SurfaceOffsetOrderCode_et.SET_POINT:
-                    sendMsg.data[1] = moveData.endPoint.x;
-                    sendMsg.data[2] = moveData.endPoint.y;
-                    sendMsg.data[7] = moveData.endPoint.z;
-
-                    ErrorCallback("set point, x=" +  sendMsg.data[1].ToString() + " y= " +  sendMsg.data[2].ToString() + " val= " +  sendMsg.data[7].ToString() + " \n");
-
-                    surfaceProbes.SetProbe(sendMsg.data[1], sendMsg.data[2], sendMsg.data[7]);
-                    break;
-                default:
-                    break;
-
-            }
-
-            ErrorCallback("SEND Surface offset " + orderCode.ToString() + " \n");
-            return conn.SendAndReceiveUdp(sendMsg);
-        }
+        
 
 
         internal void RunSurfaceProbe(int xSize, int ySize, int  xStep, int yStep)
@@ -1273,7 +996,7 @@ namespace CNC3
 
         internal void ClearSurfaceProbe()
         {
-            SendSurfaceOffset(SurfaceOffsetOrderCode_et.CLEAR, null );
+            txQueue.SendSurfaceOffset(SurfaceOffsetOrderCode_et.CLEAR, null );
             surfaceProbes.Clear();
 
         }
@@ -1348,7 +1071,7 @@ namespace CNC3
             executor.SetActPos(moveData.endPoint);
             SetState(State_et.ManualMove);
 
-            SendLine(moveData, runData.ignoreLimiters);
+            txQueue.SendLine(moveData, runData.ignoreLimiters);
 
 
         }
